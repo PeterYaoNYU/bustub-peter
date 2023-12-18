@@ -25,7 +25,7 @@ namespace bustub {
 // Check whether pages containing terminal characters can be recovered
 TEST(BufferPoolManagerTest, BinaryDataTest) {
   const std::string db_name = "test.db";
-  const size_t buffer_pool_size = 10;
+  const size_t buffer_pool_size = 1000;
   const size_t k = 5;
 
   std::random_device r;
@@ -65,25 +65,30 @@ TEST(BufferPoolManagerTest, BinaryDataTest) {
   for (size_t i = 1; i < buffer_pool_size; ++i) {
     EXPECT_NE(nullptr, bpm->NewPage(&page_id_temp));
   }
+  printf("new pages allocated\n");
 
   // Scenario: Once the buffer pool is full, we should not be able to create any new pages.
   for (size_t i = buffer_pool_size; i < buffer_pool_size * 2; ++i) {
     EXPECT_EQ(nullptr, bpm->NewPage(&page_id_temp));
   }
+  printf("cannot allocate page to the already full buffer pool\n");
 
   // Scenario: After unpinning pages {0, 1, 2, 3, 4}, we should be able to create 5 new pages
-  for (int i = 0; i < 5; ++i) {
+  for (int i = 0; i < 500; ++i) {
     EXPECT_EQ(true, bpm->UnpinPage(i, true));
     bpm->FlushPage(i);
   }
-  for (int i = 0; i < 5; ++i) {
+  printf("unpin page done\n");
+  for (int i = 0; i < 500; ++i) {
     EXPECT_NE(nullptr, bpm->NewPage(&page_id_temp));
     // Unpin the page here to allow future fetching
     bpm->UnpinPage(page_id_temp, false);
   }
+  printf("new pages allocated and unpinned\n");
 
   // Scenario: We should be able to fetch the data we wrote a while ago.
   page0 = bpm->FetchPage(0);
+  printf("page0->GetData() = %s\n", page0->GetData());
   ASSERT_NE(nullptr, page0);
   EXPECT_EQ(0, memcmp(page0->GetData(), random_binary_data, BUSTUB_PAGE_SIZE));
   EXPECT_EQ(true, bpm->UnpinPage(0, true));
@@ -99,7 +104,7 @@ TEST(BufferPoolManagerTest, BinaryDataTest) {
 // NOLINTNEXTLINE
 TEST(BufferPoolManagerTest, SampleTest) {
   const std::string db_name = "test.db";
-  const size_t buffer_pool_size = 10;
+  const size_t buffer_pool_size = 1000;
   const size_t k = 5;
 
   auto *disk_manager = new DiskManager(db_name);
@@ -136,6 +141,7 @@ TEST(BufferPoolManagerTest, SampleTest) {
     printf("unpin page\n");
     EXPECT_EQ(true, bpm->UnpinPage(i, true));
   }
+  printf("allocating new pages");
   for (int i = 0; i < 4; ++i) {
     EXPECT_NE(nullptr, bpm->NewPage(&page_id_temp));
   }

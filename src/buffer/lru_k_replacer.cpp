@@ -107,7 +107,7 @@ void LRUKReplacer::SetEvictable(frame_id_t frame_id, bool set_evictable) {
 
   auto it = node_store_.find(frame_id);
   if (it == node_store_.end()) {
-    throw Exception(ExceptionType::OUT_OF_RANGE, "Frame ID does not exist.");
+    throw Exception(ExceptionType::OUT_OF_RANGE, "Frame ID does not exist, cannot find the frame.");
   }
 
   auto &node = it->second;

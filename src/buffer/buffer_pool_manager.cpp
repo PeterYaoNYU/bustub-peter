@@ -47,24 +47,9 @@ auto BufferPoolManager::NewPage(page_id_t *page_id) -> Page * {
   } else if (replacer_->Evict(&frame_id)) {
     Page &page = pages_[frame_id];
     if (page.IsDirty()) {
-      DiskRequest write_request;
-      write_request.is_write_ = true;
-      write_request.data_ = page.GetData();
-      write_request.page_id_ = page.GetPageId();
-
-      // create the Promise and get its future
-      auto promise = disk_scheduler_->CreatePromise();
-      auto future = promise.get_future();
-
-      // set the Promise to the callback
-      write_request.callback_ = std::move(promise);
-
-      // schedule the write request
-      disk_scheduler_->Schedule(std::move(write_request));
-
-      // wait for the write request to finish
-      future.wait();
+      FlushPage(page.GetPageId());
     }
+    page_table_.erase(page.GetPageId());
   } else {
     return nullptr;
   }
@@ -79,6 +64,7 @@ auto BufferPoolManager::NewPage(page_id_t *page_id) -> Page * {
 
   page_table_[*page_id] = frame_id;
 
+  replacer_->Remove(frame_id);
   replacer_->RecordAccess(frame_id, AccessType::Unknown);
   replacer_->SetEvictable(frame_id, false);
   return &page;
@@ -91,6 +77,7 @@ auto BufferPoolManager::FetchPage(page_id_t page_id, [[maybe_unused]] AccessType
 
   if (page_table_it != page_table_.end()) {
     // page is in the buffer pool
+    // printf("Fetching page first phase, page found in buffer pool\n");
     frame_id_t frame_id = page_table_it->second;
     Page &page = pages_[frame_id];
     page.pin_count_++;
@@ -99,6 +86,8 @@ auto BufferPoolManager::FetchPage(page_id_t page_id, [[maybe_unused]] AccessType
     return &page;
   }
 
+  printf("Fetching page first phase, page not found in buffer pool\n");
+
   // page is not in the buffer pool
   frame_id_t frame_id = -1;
 
@@ -106,27 +95,19 @@ auto BufferPoolManager::FetchPage(page_id_t page_id, [[maybe_unused]] AccessType
     // get the page directly from the free list
     frame_id = free_list_.front();
     free_list_.pop_front();
+    printf("get the page from the free list\n");
   } else if (replacer_->Evict(&frame_id)) {
+    printf("evict the page from the replacer, frame id is %d\n", frame_id);
     Page &page = pages_[frame_id];
     if (page.IsDirty()) {
-      DiskRequest write_request;
-      write_request.is_write_ = true;
-      write_request.data_ = page.GetData();
-      write_request.page_id_ = page.GetPageId();
-
-      // create the Promise and get its future
-      auto promise = disk_scheduler_->CreatePromise();
-      auto future = promise.get_future();
-
-      // set the Promise to the callback
-      write_request.callback_ = std::move(promise);
-
-      // schedule the write request
-      disk_scheduler_->Schedule(std::move(write_request));
-
-      // wait for the write request to finish
-      future.wait();
+      printf("the page evicted is dirty\n");
+      FlushPage(page.GetPageId());
     }
+    page_table_.erase(page.GetPageId());
+
+    // printf("the page is getting del\n");
+    // DeletePage(page.GetPageId());
+    // printf("deletion done\n");
   } else {
     return nullptr;
   }
@@ -159,6 +140,9 @@ auto BufferPoolManager::FetchPage(page_id_t page_id, [[maybe_unused]] AccessType
 
   page_table_[page_id] = frame_id;
 
+  printf("Fetching page last phase\n");
+
+  replacer_->Remove(frame_id);
   replacer_->RecordAccess(frame_id, access_type);
   replacer_->SetEvictable(frame_id, false);
   return &page;
@@ -191,7 +175,7 @@ auto BufferPoolManager::UnpinPage(page_id_t page_id, bool is_dirty, [[maybe_unus
 
   if (is_dirty) {
     page.is_dirty_ = true;
-    FlushPage(page_id);
+    // FlushPage(page_id);
   }
 
   return true;
@@ -226,7 +210,7 @@ auto BufferPoolManager::FlushPage(page_id_t page_id) -> bool {
   future.wait();
   page.is_dirty_ = false;
 
-  page_table_.erase(it);
+  // page_table_.erase(it);
   return true;
 }
 
@@ -246,16 +230,26 @@ auto BufferPoolManager::DeletePage(page_id_t page_id) -> bool {
   }
 
   frame_id_t frame_id = it->second;
+  // printf("deletePage, the page id is %d, and the frame id is %d\n", page_id, frame_id);
   Page &page = pages_[frame_id];
 
   if (page.pin_count_ > 0) {
     return false;
   }
 
+  if (page.IsDirty()) {
+    FlushPage(page_id);
+  }
+
+  page.ResetMemory();
+  page.page_id_ = INVALID_PAGE_ID;
+  page.pin_count_ = 0;
+  page.is_dirty_ = false;
   page_table_.erase(it);
-  replacer_->SetEvictable(frame_id, true);
+  // replacer_->SetEvictable(frame_id, true);
   replacer_->Remove(frame_id);
   free_list_.push_back(frame_id);
+  DeallocatePage(page_id);
   return true;
 }
 
