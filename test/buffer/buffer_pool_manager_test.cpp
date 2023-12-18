@@ -23,7 +23,7 @@ namespace bustub {
 
 // NOLINTNEXTLINE
 // Check whether pages containing terminal characters can be recovered
-TEST(BufferPoolManagerTest, DISABLED_BinaryDataTest) {
+TEST(BufferPoolManagerTest, BinaryDataTest) {
   const std::string db_name = "test.db";
   const size_t buffer_pool_size = 10;
   const size_t k = 5;
@@ -97,7 +97,7 @@ TEST(BufferPoolManagerTest, DISABLED_BinaryDataTest) {
 }
 
 // NOLINTNEXTLINE
-TEST(BufferPoolManagerTest, DISABLED_SampleTest) {
+TEST(BufferPoolManagerTest, SampleTest) {
   const std::string db_name = "test.db";
   const size_t buffer_pool_size = 10;
   const size_t k = 5;
@@ -116,6 +116,8 @@ TEST(BufferPoolManagerTest, DISABLED_SampleTest) {
   snprintf(page0->GetData(), BUSTUB_PAGE_SIZE, "Hello");
   EXPECT_EQ(0, strcmp(page0->GetData(), "Hello"));
 
+  // std::cout<<"page0->GetData() = "<<page0->GetData()<<std::endl;
+
   // Scenario: We should be able to create new pages until we fill up the buffer pool.
   for (size_t i = 1; i < buffer_pool_size; ++i) {
     EXPECT_NE(nullptr, bpm->NewPage(&page_id_temp));
@@ -126,9 +128,12 @@ TEST(BufferPoolManagerTest, DISABLED_SampleTest) {
     EXPECT_EQ(nullptr, bpm->NewPage(&page_id_temp));
   }
 
+  printf("cannot allocate page to the already full buffer pool\n");
+
   // Scenario: After unpinning pages {0, 1, 2, 3, 4} and pinning another 4 new pages,
   // there would still be one buffer page left for reading page 0.
   for (int i = 0; i < 5; ++i) {
+    printf("unpin page\n");
     EXPECT_EQ(true, bpm->UnpinPage(i, true));
   }
   for (int i = 0; i < 4; ++i) {
@@ -139,10 +144,13 @@ TEST(BufferPoolManagerTest, DISABLED_SampleTest) {
   page0 = bpm->FetchPage(0);
   ASSERT_NE(nullptr, page0);
   EXPECT_EQ(0, strcmp(page0->GetData(), "Hello"));
+  printf("page0->GetData() = %s\n", page0->GetData());
 
   // Scenario: If we unpin page 0 and then make a new page, all the buffer pages should
   // now be pinned. Fetching page 0 again should fail.
+  printf("unpin page 0\n");
   EXPECT_EQ(true, bpm->UnpinPage(0, true));
+  printf("new page after unpin 0\n");
   EXPECT_NE(nullptr, bpm->NewPage(&page_id_temp));
   EXPECT_EQ(nullptr, bpm->FetchPage(0));
 

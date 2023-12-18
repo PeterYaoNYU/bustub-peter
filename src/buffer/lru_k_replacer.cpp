@@ -78,12 +78,23 @@ void LRUKReplacer::RecordAccess(frame_id_t frame_id, [[maybe_unused]] AccessType
 
   ++current_timestamp_;
 
-  auto &node = node_store_[frame_id];
-  node.fid_ = frame_id;
-  if (node.history_.size() >= k_) {
-    node.history_.pop_front();  // Ensure only the last k timestamps are kept
+  // Check if the frame_id exists in node_store_.
+  auto it = node_store_.find(frame_id);
+  if (it == node_store_.end()) {
+    // If not found, initialize a new LRUKNode and insert it into node_store_.
+    LRUKNode new_node;
+    new_node.fid_ = frame_id;
+    new_node.history_.push_back(current_timestamp_);
+    new_node.k_ = k_;  // Assuming k_ is a property you want to set during initialization.
+    node_store_.emplace(frame_id, std::move(new_node));
+  } else {
+    // If found, update the existing node.
+    auto &node = it->second;
+    if (node.history_.size() >= k_) {
+      node.history_.pop_front();  // Ensure only the last k timestamps are kept.
+    }
+    node.history_.push_back(current_timestamp_);
   }
-  node.history_.push_back(current_timestamp_);
 }
 
 void LRUKReplacer::SetEvictable(frame_id_t frame_id, bool set_evictable) {
