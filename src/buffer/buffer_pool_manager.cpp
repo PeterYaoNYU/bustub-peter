@@ -157,7 +157,6 @@ auto BufferPoolManager::FetchPage(page_id_t page_id, [[maybe_unused]] AccessType
   // wait for the read request to finish
   future.wait();
 
-
   page_table_[page_id] = frame_id;
 
   replacer_->RecordAccess(frame_id, access_type);
@@ -199,7 +198,6 @@ auto BufferPoolManager::UnpinPage(page_id_t page_id, bool is_dirty, [[maybe_unus
 }
 
 auto BufferPoolManager::FlushPage(page_id_t page_id) -> bool {
-  
   // std::lock_guard<std::mutex> lock(latch_);
   auto it = page_table_.find(page_id);
   if (it == page_table_.end()) {
@@ -214,7 +212,6 @@ auto BufferPoolManager::FlushPage(page_id_t page_id) -> bool {
   write_request.data_ = page.GetData();
   write_request.page_id_ = page.GetPageId();
 
-
   // create the Promise and get its future
   auto promise = disk_scheduler_->CreatePromise();
   auto future = promise.get_future();
@@ -226,7 +223,7 @@ auto BufferPoolManager::FlushPage(page_id_t page_id) -> bool {
   disk_scheduler_->Schedule(std::move(write_request));
 
   // wait for the write request to finish
-  future.wait();  
+  future.wait();
   page.is_dirty_ = false;
 
   page_table_.erase(it);
