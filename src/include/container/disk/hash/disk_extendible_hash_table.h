@@ -101,7 +101,7 @@ class DiskExtendibleHashTable {
   void PrintHT() const;
 
   auto SplitBucket(ExtendibleHTableDirectoryPage *directory, ExtendibleHTableBucketPage<K, V, KC> *bucket,
-                  uint32_t bucket_idx) -> bool;
+                   uint32_t bucket_idx) -> bool;
 
  private:
   /**
@@ -127,29 +127,28 @@ class DiskExtendibleHashTable {
                       uint32_t local_depth_mask);
 
   void PotentialMergeBucket(ExtendibleHTableDirectoryPage *directory, ExtendibleHTableBucketPage<K, V, KC> *bucket,
-                        uint32_t bucket_idx) 
-  {
-    while (true){
-      if (directory->GetLocalDepth(bucket_idx) == 0){
+                            uint32_t bucket_idx) {
+    while (true) {
+      if (directory->GetLocalDepth(bucket_idx) == 0) {
         return;
       }
 
       uint32_t split_idx = directory->GetSplitImageIndex(bucket_idx);
       page_id_t split_page_id = directory->GetBucketPageId(split_idx);
 
-      if (directory->GetLocalDepth(bucket_idx) != directory->GetLocalDepth(split_idx)){
+      if (directory->GetLocalDepth(bucket_idx) != directory->GetLocalDepth(split_idx)) {
         return;
       }
 
       WritePageGuard split_guard = bpm_->FetchPageWrite(split_page_id);
       auto *split_bucket = split_guard.AsMut<ExtendibleHTableBucketPage<K, V, KC>>();
 
-      if (!bucket->IsEmpty() && !split_bucket->IsEmpty()){
+      if (!bucket->IsEmpty() && !split_bucket->IsEmpty()) {
         return;
       }
 
       int size = split_bucket->Size();
-      for (int i = 0; i < size; i++){
+      for (int i = 0; i < size; i++) {
         auto entry = split_bucket->EntryAt(i);
         bucket->Insert(entry.first, entry.second, cmp_);
       }

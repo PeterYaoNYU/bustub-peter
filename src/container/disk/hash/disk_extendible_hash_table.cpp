@@ -98,14 +98,13 @@ auto DiskExtendibleHashTable<K, V, KC>::Insert(const K &key, const V &value, Tra
 
   WritePageGuard header_guard = bpm_->FetchPageWrite(header_page_id_);
   auto header = header_guard.AsMut<ExtendibleHTableHeaderPage>();
-
   uint32_t directory_idx = header->HashToDirectoryIndex(Hash(key));
   page_id_t directory_page_id = header->GetDirectoryPageId(directory_idx);
 
   ExtendibleHTableDirectoryPage *directory;
   WritePageGuard directory_guard;
   if (directory_page_id == INVALID_PAGE_ID) {
-    printf("hashed to a new directory page\n");
+    // printf("hashed to a new directory page, directory idx: %d\n", directory_idx);
     // create a new directory page
     BasicPageGuard directory_guard_basic = bpm_->NewPageGuarded(&directory_page_id);
     directory_guard = directory_guard_basic.UpgradeWrite();
@@ -208,19 +207,19 @@ auto DiskExtendibleHashTable<K, V, KC>::Remove(const K &key, Transaction *transa
   if (bucket_page_id == INVALID_PAGE_ID) {
     return false;
   }
-  
+
   WritePageGuard bucket_guard = bpm_->FetchPageWrite(bucket_page_id);
   auto bucket = bucket_guard.AsMut<ExtendibleHTableBucketPage<K, V, KC>>();
 
   if (!bucket->Remove(key, cmp_)) {
     return false;
   }
-  
-  if (bucket->IsEmpty()){
+
+  if (bucket->IsEmpty()) {
     PotentialMergeBucket(directory, bucket, bucket_idx);
   }
 
-  while (directory->CanShrink()){
+  while (directory->CanShrink()) {
     directory->DecrGlobalDepth();
   }
   return true;
@@ -231,6 +230,7 @@ auto DiskExtendibleHashTable<K, V, KC>::SplitBucket(ExtendibleHTableDirectoryPag
                                                     ExtendibleHTableBucketPage<K, V, KC> *bucket, uint32_t bucket_idx)
     -> bool {
   page_id_t split_page_id;
+  // printf("the bucket idx that is being split up: %d\n", bucket_idx);
   BasicPageGuard split_bucket_guard_basic = bpm_->NewPageGuarded(&split_page_id);
   if (split_page_id == INVALID_PAGE_ID) {
     return false;
@@ -244,6 +244,7 @@ auto DiskExtendibleHashTable<K, V, KC>::SplitBucket(ExtendibleHTableDirectoryPag
   uint32_t split_idx = directory->GetSplitImageIndex(bucket_idx);
   directory->SetBucketPageId(split_idx, split_page_id);
   directory->SetLocalDepth(split_idx, local_depth);
+  // printf("split_idx: %d, local_depth: %d\n", split_idx, local_depth);
 
   // update all pointers in the directory page
   uint32_t idx_diff = 1 << local_depth;

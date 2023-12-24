@@ -181,7 +181,6 @@ TEST(ExtendibleHTableTest, HeaderDirectoryPageSampleTest) {
     }
     printf("dir test 1 passed\n");
 
-
     directory_page->SetLocalDepth(0, 2);
     directory_page->IncrGlobalDepth();
     directory_page->SetBucketPageId(2, bucket_page_id_3);

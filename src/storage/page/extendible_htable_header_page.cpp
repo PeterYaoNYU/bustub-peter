@@ -23,8 +23,12 @@ void ExtendibleHTableHeaderPage::Init(uint32_t max_depth) {
 }
 
 auto ExtendibleHTableHeaderPage::HashToDirectoryIndex(uint32_t hash) const -> uint32_t {
+  if (max_depth_ == 0) {
+    return 0;
+  }
   uint32_t shift = 32 - max_depth_;
   uint32_t directory_index = hash >> shift;
+  // printf("hash: %d, shift: %d, directory_index: %d, max_depth: %d\n", hash, shift, directory_index, max_depth_);
   return directory_index;
 }
 
