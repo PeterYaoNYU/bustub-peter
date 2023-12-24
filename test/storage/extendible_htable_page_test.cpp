@@ -29,7 +29,7 @@
 namespace bustub {
 
 // NOLINTNEXTLINE
-TEST(ExtendibleHTableTest, DISABLED_BucketPageSampleTest) {
+TEST(ExtendibleHTableTest, BucketPageSampleTest) {
   auto disk_mgr = std::make_unique<DiskManagerUnlimitedMemory>();
   auto bpm = std::make_unique<BufferPoolManager>(5, disk_mgr.get());
 
@@ -46,6 +46,7 @@ TEST(ExtendibleHTableTest, DISABLED_BucketPageSampleTest) {
 
     // insert a few (key, value) pairs
     for (int64_t i = 0; i < 10; i++) {
+      printf("Inserting %lld\n", i);
       index_key.SetFromInteger(i);
       rid.Set(i, i);
       ASSERT_TRUE(bucket_page->Insert(index_key, rid, comparator));
@@ -87,7 +88,7 @@ TEST(ExtendibleHTableTest, DISABLED_BucketPageSampleTest) {
 }
 
 // NOLINTNEXTLINE
-TEST(ExtendibleHTableTest, DISABLED_HeaderDirectoryPageSampleTest) {
+TEST(ExtendibleHTableTest, HeaderDirectoryPageSampleTest) {
   auto disk_mgr = std::make_unique<DiskManagerUnlimitedMemory>();
   auto bpm = std::make_unique<BufferPoolManager>(5, disk_mgr.get());
 
@@ -117,6 +118,8 @@ TEST(ExtendibleHTableTest, DISABLED_HeaderDirectoryPageSampleTest) {
     }
 
     header_guard.Drop();
+
+    printf("Header Page Test Passed!\n");
 
     /************************ DIRECTORY PAGE TEST ************************/
     BasicPageGuard directory_guard = bpm->NewPageGuarded(&directory_page_id);
@@ -152,6 +155,8 @@ TEST(ExtendibleHTableTest, DISABLED_HeaderDirectoryPageSampleTest) {
     ASSERT_EQ(directory_page->Size(), 1);
     ASSERT_EQ(directory_page->GetBucketPageId(0), bucket_page_id_1);
 
+    printf("dir test 0 passed\n");
+
     // grow the directory, local depths should change!
     directory_page->SetLocalDepth(0, 1);
     directory_page->IncrGlobalDepth();
@@ -174,6 +179,8 @@ TEST(ExtendibleHTableTest, DISABLED_HeaderDirectoryPageSampleTest) {
     for (uint32_t i = 0; i < 100; i++) {
       ASSERT_EQ(directory_page->HashToBucketIndex(i), i % 2);
     }
+    printf("dir test 1 passed\n");
+
 
     directory_page->SetLocalDepth(0, 2);
     directory_page->IncrGlobalDepth();
@@ -189,16 +196,19 @@ TEST(ExtendibleHTableTest, DISABLED_HeaderDirectoryPageSampleTest) {
     ================ END DIRECTORY ================
     */
 
+    ASSERT_EQ(directory_page->GetBucketPageId(3), bucket_page_id_2);
+
     directory_page->VerifyIntegrity();
     ASSERT_EQ(directory_page->Size(), 4);
     ASSERT_EQ(directory_page->GetBucketPageId(0), bucket_page_id_1);
     ASSERT_EQ(directory_page->GetBucketPageId(1), bucket_page_id_2);
     ASSERT_EQ(directory_page->GetBucketPageId(2), bucket_page_id_3);
-    ASSERT_EQ(directory_page->GetBucketPageId(3), bucket_page_id_2);
 
     for (uint32_t i = 0; i < 100; i++) {
       ASSERT_EQ(directory_page->HashToBucketIndex(i), i % 4);
     }
+
+    printf("dir test 2 passed\n");
 
     directory_page->SetLocalDepth(0, 3);
     directory_page->IncrGlobalDepth();

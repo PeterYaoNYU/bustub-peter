@@ -103,6 +103,7 @@ auto WritePageGuard::operator=(WritePageGuard &&that) noexcept -> WritePageGuard
 void WritePageGuard::Drop() {
   if (guard_.page_ != nullptr && guard_.bpm_ != nullptr) {
     guard_.page_->WUnlatch();
+    // guard_.is_dirty_ = true;
     guard_.Drop();
     guard_.page_ = nullptr;
   }

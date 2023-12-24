@@ -112,6 +112,11 @@ class ExtendibleHTableBucketPage {
   auto EntryAt(uint32_t bucket_idx) const -> const std::pair<KeyType, ValueType> &;
 
   /**
+   * Clear all contents in the bucket.
+   */
+  void Clear() { size_ = 0; }
+
+  /**
    * @return number of entries in the bucket
    */
   auto Size() const -> uint32_t;
