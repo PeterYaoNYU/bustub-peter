@@ -105,6 +105,7 @@ auto DiskExtendibleHashTable<K, V, KC>::Insert(const K &key, const V &value, Tra
   ExtendibleHTableDirectoryPage *directory;
   WritePageGuard directory_guard;
   if (directory_page_id == INVALID_PAGE_ID) {
+    printf("hashed to a new directory page\n");
     // create a new directory page
     BasicPageGuard directory_guard_basic = bpm_->NewPageGuarded(&directory_page_id);
     directory_guard = directory_guard_basic.UpgradeWrite();
