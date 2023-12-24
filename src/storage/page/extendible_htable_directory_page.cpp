@@ -18,12 +18,14 @@
 #include "common/config.h"
 #include "common/logger.h"
 
+#include <cstring>
+
 namespace bustub {
 
 void ExtendibleHTableDirectoryPage::Init(uint32_t max_depth) {
   max_depth_ = max_depth;
-  std::memset(local_depths_, 0x00, sizeof(local_depths_));
-  std::memset(bucket_page_ids_, 0xff, sizeof(bucket_page_ids_));
+  memset(local_depths_, 0x00, sizeof(local_depths_));
+  memset(bucket_page_ids_, 0xff, sizeof(bucket_page_ids_));
 }
 
 auto ExtendibleHTableDirectoryPage::HashToBucketIndex(uint32_t hash) const -> uint32_t {

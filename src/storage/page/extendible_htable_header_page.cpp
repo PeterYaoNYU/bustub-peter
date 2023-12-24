@@ -14,12 +14,14 @@
 
 #include "common/exception.h"
 
+#include <cstring>
+
 namespace bustub {
 
 void ExtendibleHTableHeaderPage::Init(uint32_t max_depth) {
   // throw NotImplementedException("ExtendibleHTableHeaderPage is not implemented");
   max_depth_ = max_depth;
-  std::memset(directory_page_ids_, 0xff, sizeof(directory_page_ids_));
+  memset(directory_page_ids_, 0xff, sizeof(directory_page_ids_));
 }
 
 auto ExtendibleHTableHeaderPage::HashToDirectoryIndex(uint32_t hash) const -> uint32_t {
