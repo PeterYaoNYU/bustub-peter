@@ -37,7 +37,7 @@ auto UpdateExecutor::Next([[maybe_unused]] Tuple *tuple, RID *rid) -> bool {
   // keep a track of how many rows have been updated
   int count = 0;
 
-  while (true){
+  while (true) {
     // this child_tuple is important,keep a copy of the old tuple, so that we can delete it from the index
     Tuple child_tuple{};
     auto status = child_executor_->Next(&child_tuple, rid);
@@ -50,16 +50,20 @@ auto UpdateExecutor::Next([[maybe_unused]] Tuple *tuple, RID *rid) -> bool {
     for (const auto &update_clause : plan_->target_expressions_) {
       values.push_back(update_clause->Evaluate(&child_tuple, child_executor_->GetOutputSchema()));
     }
-    bool updated = table_heap_->UpdateTupleInPlace(tuple_meta, Tuple{values, &child_executor_->GetOutputSchema()}, *rid);
-    if (updated){
+    bool updated =
+        table_heap_->UpdateTupleInPlace(tuple_meta, Tuple{values, &child_executor_->GetOutputSchema()}, *rid);
+    if (updated) {
       for (auto &index_info : indexes_) {
-        index_info->index_->DeleteEntry(child_tuple.KeyFromTuple(schema, index_info->key_schema_, index_info->index_->GetKeyAttrs()), *rid, tx);
+        index_info->index_->DeleteEntry(
+            child_tuple.KeyFromTuple(schema, index_info->key_schema_, index_info->index_->GetKeyAttrs()), *rid, tx);
         // printf("assertion pending\n");
         assert(values.size() == child_executor_->GetOutputSchema().GetColumnCount());
         // printf("Assertion passed\n");
-        index_info->index_->InsertEntry(Tuple{values, &child_executor_->GetOutputSchema()}.KeyFromTuple(schema, index_info->key_schema_, index_info->index_->GetKeyAttrs()), *rid, tx);
+        index_info->index_->InsertEntry(Tuple{values, &child_executor_->GetOutputSchema()}.KeyFromTuple(
+                                            schema, index_info->key_schema_, index_info->index_->GetKeyAttrs()),
+                                        *rid, tx);
       }
-    } else if (!updated){
+    } else if (!updated) {
       return false;
     }
     count++;
