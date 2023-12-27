@@ -19,8 +19,8 @@ void IndexScanExecutor::Init() {
   // get the raw pointer to the table heap
   table_heap_ = GetExecutorContext()->GetCatalog()->GetTable(plan_->GetTableOid())->table_.get();
   table_info_ = GetExecutorContext()->GetCatalog()->GetTable(plan_->GetTableOid());
-  auto index_info_ = GetExecutorContext()->GetCatalog()->GetIndex(plan_->GetIndexOid());
-  htable_ = dynamic_cast<HashTableIndexForTwoIntegerColumn *>(index_info_->index_.get());
+  auto index_info = GetExecutorContext()->GetCatalog()->GetIndex(plan_->GetIndexOid());
+  htable_ = dynamic_cast<HashTableIndexForTwoIntegerColumn *>(index_info->index_.get());
 
   // do the actual scan
   rids_.clear();
@@ -30,7 +30,7 @@ void IndexScanExecutor::Init() {
     Value v = plan_->pred_key_->val_;
     std::vector<Value> values;
     values.push_back(v);
-    htable_->ScanKey(Tuple(values, &index_info_->key_schema_), &rids_, GetExecutorContext()->GetTransaction());
+    htable_->ScanKey(Tuple(values, &index_info->key_schema_), &rids_, GetExecutorContext()->GetTransaction());
     // printf("index scan finished, rids size is %zu\n", rids_.size());
   }
 
@@ -59,7 +59,7 @@ auto IndexScanExecutor::Next(Tuple *tuple, RID *rid) -> bool {
     // if the tuple that the cursor is pointing to does not meet the predicate, do not return it
     if (plan_->filter_predicate_ != nullptr) {
       auto value = plan_->filter_predicate_->Evaluate(tuple, plan_->OutputSchema());
-      if (value.IsNull() || value.GetAs<bool>() == false) {
+      if (value.IsNull() || !value.GetAs<bool>()) {
         ++rids_iterator_;
         continue;
       }

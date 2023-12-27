@@ -67,6 +67,6 @@ class DeleteExecutor : public AbstractExecutor {
 
   TableHeap *table_heap_;
   std::vector<IndexInfo *> indexes_;
-  bool called;
+  bool called_;
 };
 }  // namespace bustub

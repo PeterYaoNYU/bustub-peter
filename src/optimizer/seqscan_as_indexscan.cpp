@@ -26,7 +26,7 @@ auto Optimizer::OptimizeSeqScanAsIndexScan(const bustub::AbstractPlanNodeRef &pl
     if (seq_scan_plan.filter_predicate_ == nullptr) {
       return optimized_plan;
     }
-    ComparisonExpression *cmp_expr = dynamic_cast<ComparisonExpression *>(seq_scan_plan.filter_predicate_.get());
+    auto cmp_expr = dynamic_cast<ComparisonExpression *>(seq_scan_plan.filter_predicate_.get());
     // check if the cmp_expr is an equi comparison
     if (cmp_expr == nullptr || cmp_expr->comp_type_ != ComparisonType::Equal) {
       return optimized_plan;

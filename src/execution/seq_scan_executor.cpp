@@ -52,7 +52,7 @@ auto SeqScanExecutor::Next(Tuple *tuple, RID *rid) -> bool {
     // if the tuple that the cursor is pointing to does not meet the predicate, do not return it
     if (plan_->filter_predicate_ != nullptr) {
       auto value = plan_->filter_predicate_->Evaluate(tuple, plan_->OutputSchema());
-      if (value.IsNull() || value.GetAs<bool>() == false) {
+      if (value.IsNull() || !value.GetAs<bool>()) {
         ++rids_iterator_;
         continue;
       }

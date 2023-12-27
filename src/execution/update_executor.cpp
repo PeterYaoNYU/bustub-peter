@@ -29,10 +29,10 @@ void UpdateExecutor::Init() {
 }
 
 auto UpdateExecutor::Next([[maybe_unused]] Tuple *tuple, RID *rid) -> bool {
-  auto table_name_ = table_info_->name_;
+  auto table_name = table_info_->name_;
   Transaction *tx = GetExecutorContext()->GetTransaction();
-  TupleMeta tuple_meta = {.is_deleted_ = false, .ts_ = tx->GetTransactionTempTs()};
-  Schema schema = GetExecutorContext()->GetCatalog()->GetTable(table_name_)->schema_;
+  TupleMeta tuple_meta = {.ts_ = tx->GetTransactionTempTs(), .is_deleted_ = false};
+  Schema schema = GetExecutorContext()->GetCatalog()->GetTable(table_name)->schema_;
 
   // keep a track of how many rows have been updated
   int count = 0;
@@ -74,11 +74,11 @@ auto UpdateExecutor::Next([[maybe_unused]] Tuple *tuple, RID *rid) -> bool {
   values.reserve(GetOutputSchema().GetColumnCount());
   values.emplace_back(INTEGER, count);
   *tuple = Tuple{values, &GetOutputSchema()};
-  if (count == 0 and !called) {
-    called = true;
+  if (count == 0 and !called_) {
+    called_ = true;
     return true;
   }
-  called = true;
+  called_ = true;
   return count != 0;
 }
 

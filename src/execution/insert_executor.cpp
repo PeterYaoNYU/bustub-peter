@@ -26,14 +26,14 @@ void InsertExecutor::Init() {
   table_name_ = GetExecutorContext()->GetCatalog()->GetTable(plan_->GetTableOid())->name_;
   table_heap_ = GetExecutorContext()->GetCatalog()->GetTable(plan_->GetTableOid())->table_.get();
   indexes_ = GetExecutorContext()->GetCatalog()->GetTableIndexes(table_name_);
-  called = false;
+  called_ = false;
   // printf("InsertExecutor::Init end\n");
 }
 
 auto InsertExecutor::Next([[maybe_unused]] Tuple *tuple, RID *rid) -> bool {
   Transaction *tx = GetExecutorContext()->GetTransaction();
   LockManager *lock_manager = GetExecutorContext()->GetLockManager();
-  TupleMeta tuple_meta = {.is_deleted_ = false, .ts_ = tx->GetTransactionTempTs()};
+  TupleMeta tuple_meta = {.ts_ = tx->GetTransactionTempTs(), .is_deleted_ = false};
   Schema schema = GetExecutorContext()->GetCatalog()->GetTable(table_name_)->schema_;
 
   int count = 0;
@@ -64,11 +64,11 @@ auto InsertExecutor::Next([[maybe_unused]] Tuple *tuple, RID *rid) -> bool {
   values.reserve(GetOutputSchema().GetColumnCount());
   values.emplace_back(INTEGER, count);
   *tuple = Tuple{values, &GetOutputSchema()};
-  if (count == 0 and !called) {
-    called = true;
+  if (count == 0 and !called_) {
+    called_ = true;
     return true;
   }
-  called = true;
+  called_ = true;
   return count != 0;
 }
 

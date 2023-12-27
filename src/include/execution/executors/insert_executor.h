@@ -65,7 +65,7 @@ class InsertExecutor : public AbstractExecutor {
   TableHeap *table_heap_;
   std::vector<IndexInfo *> indexes_;
   std::string table_name_;
-  bool called;
+  bool called_;
 };
 
 }  // namespace bustub
