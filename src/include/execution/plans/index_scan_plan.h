@@ -52,6 +52,9 @@ class IndexScanPlanNode : public AbstractPlanNode {
   /** The table which the index is created on. */
   table_oid_t table_oid_;
 
+  // peter: return the table id of what should be scanned with index scan
+  auto GetTableOid() const -> table_oid_t { return table_oid_; }
+
   /** The index whose tuples should be scanned. */
   index_oid_t index_oid_;
 
