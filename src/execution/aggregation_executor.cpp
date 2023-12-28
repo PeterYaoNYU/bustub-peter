@@ -25,11 +25,15 @@ AggregationExecutor::AggregationExecutor(ExecutorContext *exec_ctx, const Aggreg
       aht_iterator_(aht_.Begin()) {}
 
 void AggregationExecutor::Init() {
+  // this Clear is very important, otherwise leads to problems in repeated subquery
+  // like this: select * from __mock_table_123, (select count(*) as cnt from t1);
+  aht_.Clear();
   child_executor_->Init();
 
   // Iterate over all tuples from the child executor
   Tuple tuple;
   RID rid;
+
   while (child_executor_->Next(&tuple, &rid)) {
     // Make an aggregate key and value for the tuple
     auto agg_key = MakeAggregateKey(&tuple);
