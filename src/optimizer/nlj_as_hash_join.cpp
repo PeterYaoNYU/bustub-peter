@@ -65,10 +65,12 @@ auto Optimizer::OptimizeNLJAsHashJoin(const AbstractPlanNodeRef &plan) -> Abstra
     std::function<void(const LogicExpression *)> process_logic_expr;
     // for this lambda function, we are capturing by reference
     process_logic_expr = [&] (const LogicExpression *logic_expr) {
+      printf("processing logic expression\n");
       if (const auto *left_logic_expr = dynamic_cast<const LogicExpression *>(logic_expr->GetChildAt(0).get()); left_logic_expr != nullptr){
         process_logic_expr(left_logic_expr);
-      } else if (const auto *cmp_expr = dynamic_cast<const ComparisonExpression *>(logic_expr->GetChildAt(0).get()); left_logic_expr != nullptr){
+      } else if (const auto *cmp_expr = dynamic_cast<const ComparisonExpression *>(logic_expr->GetChildAt(0).get()); cmp_expr != nullptr){
         if (cmp_expr->comp_type_ == ComparisonType::Equal){
+          printf("entering cmp expression\n");
           const auto *left_col_expr = dynamic_cast<const ColumnValueExpression *>(cmp_expr->GetChildAt(0).get());
           const auto *right_col_expr = dynamic_cast<const ColumnValueExpression *>(cmp_expr->GetChildAt(1).get());
 
@@ -90,8 +92,9 @@ auto Optimizer::OptimizeNLJAsHashJoin(const AbstractPlanNodeRef &plan) -> Abstra
       // now process the right child 
       if (const auto * right_logic_expr = dynamic_cast<const LogicExpression *>(logic_expr->GetChildAt(1).get()); right_logic_expr != nullptr){
         process_logic_expr(right_logic_expr);
-      } else if (const auto *cmp_expr = dynamic_cast<const ComparisonExpression *>(logic_expr->GetChildAt(1).get()); right_logic_expr != nullptr){
+      } else if (const auto *cmp_expr = dynamic_cast<const ComparisonExpression *>(logic_expr->GetChildAt(1).get()); cmp_expr != nullptr){
         if (cmp_expr->comp_type_ == ComparisonType::Equal){
+          printf("entering cmp expression again\n");
           const auto *left_col_expr = dynamic_cast<const ColumnValueExpression *>(cmp_expr->GetChildAt(0).get());
           const auto *right_col_expr = dynamic_cast<const ColumnValueExpression *>(cmp_expr->GetChildAt(1).get());
 
@@ -109,6 +112,8 @@ auto Optimizer::OptimizeNLJAsHashJoin(const AbstractPlanNodeRef &plan) -> Abstra
           }
         }
       }
+
+      printf("finished processing logic expression\n Left tuple size: %lu\n Right tuple size: %lu\n", left_expr_tuples.size(), right_expr_tuples.size());
     };
 
     process_logic_expr(expr);

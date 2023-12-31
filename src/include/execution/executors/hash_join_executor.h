@@ -27,6 +27,7 @@
 
 // do not include common/hash_util.h, because it can lead to redefiniton error
 #include "common/util/hash_util.h"
+#include "type/value_factory.h"
 
 namespace bustub {
 
@@ -37,16 +38,46 @@ struct HashJoinKey {
   auto operator==(const HashJoinKey &other) const -> bool { return key_.CompareEquals(other.key_) == CmpBool::CmpTrue; }
 };
 
+struct CompositeJoinKey {
+  std::vector<HashJoinKey> keys;
+
+  bool operator==(const CompositeJoinKey &other) const {
+    if (keys.size() != other.keys.size()) {
+      return false;
+    }
+    for (size_t i = 0; i < keys.size(); ++i) {
+      if (!(keys[i] == other.keys[i])) {
+        return false;
+      }
+    }
+    return true;
+  }
+};
+
 }  // namespace bustub
 
 // creating a hash function for HashJoinKey
 namespace std{
-  template <>
-  struct hash<bustub::HashJoinKey> {
-    auto operator()(const bustub::HashJoinKey &key) const -> size_t {
-      return bustub::HashUtil::HashValue(&key.key_);
+template <>
+struct hash<bustub::HashJoinKey> {
+  auto operator()(const bustub::HashJoinKey &key) const -> size_t {
+    return bustub::HashUtil::HashValue(&key.key_);
+  }
+};
+
+
+template <>
+struct hash<bustub::CompositeJoinKey> {
+  size_t operator()(const bustub::CompositeJoinKey &compositeKey) const {
+    size_t curr_hash = 0;
+    for (const auto &key : compositeKey.keys) {
+      if (!key.key_.IsNull()) {
+        curr_hash = bustub::HashUtil::CombineHashes(curr_hash, bustub::HashUtil::HashValue(&key.key_));
+      }
     }
-  };
+    return curr_hash;
+  }
+};
 }
 
 namespace bustub {
@@ -107,6 +138,8 @@ class HashJoinExecutor : public AbstractExecutor {
 
   auto InnerJoinOutput(const Tuple &left, const Tuple &right) -> Tuple;
 
+  auto LeftOuterJoinOutput(const Tuple &left) -> Tuple;
+
   /** The HashJoin plan node to be executed. */
   const HashJoinPlanNode *plan_;
 
@@ -121,9 +154,14 @@ class HashJoinExecutor : public AbstractExecutor {
   std::vector<std::unordered_map<HashJoinKey, std::vector<Tuple>>> hash_tables_;
 
   // the htable for telling if a left join hashkey has a mathcing right tuple, used in left join
-  std::unordered_map<HashJoinKey, bool> left_done_;
+  // std::unordered_map<HashJoinKey, bool> left_done_;
+  std::unordered_map<CompositeJoinKey, bool, std::hash<CompositeJoinKey>> left_done_;
 
   std::queue<Tuple> queue_;
+
+  bool left_join_check_ = false;
+
+  std::vector<Tuple> left_tuples_;
 };
 
 }  // namespace bustub
