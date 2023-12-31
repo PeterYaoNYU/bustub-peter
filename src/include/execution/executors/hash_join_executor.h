@@ -151,7 +151,8 @@ class HashJoinExecutor : public AbstractExecutor {
 
   // a vector of hash table, one for each join key on the left side
   // the hashed value is a vector of tuples, because there can be multiple tuples with the same hash key
-  std::vector<std::unordered_map<HashJoinKey, std::vector<Tuple>>> hash_tables_;
+  // std::vector<std::unordered_map<HashJoinKey, std::vector<Tuple>>> hash_tables_;
+  std::unordered_map<CompositeJoinKey, std::vector<Tuple>, std::hash<CompositeJoinKey>> hash_table_;
 
   // the htable for telling if a left join hashkey has a mathcing right tuple, used in left join
   // std::unordered_map<HashJoinKey, bool> left_done_;
@@ -160,8 +161,6 @@ class HashJoinExecutor : public AbstractExecutor {
   std::queue<Tuple> queue_;
 
   bool left_join_check_ = false;
-
-  std::vector<Tuple> left_tuples_;
 };
 
 }  // namespace bustub

@@ -21,7 +21,7 @@ HashJoinExecutor::HashJoinExecutor(ExecutorContext *exec_ctx, const HashJoinPlan
       plan_(plan),
       left_child_(std::move(left_child)),
       right_child_(std::move(right_child)) {
-  printf("hash join executor constructor\n");
+  // printf("hash join executor constructor\n");
   if (!(plan->GetJoinType() == JoinType::LEFT || plan->GetJoinType() == JoinType::INNER)) {
     // Note for 2023 Fall: You ONLY need to implement left join and inner join.
     throw bustub::NotImplementedException(fmt::format("join type {} not supported", plan->GetJoinType()));
@@ -35,32 +35,24 @@ void HashJoinExecutor::Init() {
   Tuple left_tuple;
   RID left_rid;
 
-  // init the hash table vectors hash_table_
-  for (size_t i = 0; i < plan_->LeftJoinKeyExpressions().size(); i++) {
-    hash_tables_.emplace_back();
-  }
-
   int left_table_size =0;
 
   while (left_child_->Next(&left_tuple, &left_rid)) {
     left_table_size++;
     std::vector<HashJoinKey> key = MakeHashJoinLeftKey(&left_tuple, left_child_->GetOutputSchema());
-    for (size_t i = 0; i < key.size(); i++) {
-      auto left_key = key[i];
-      if (hash_tables_[i].find(left_key) == hash_tables_[i].end()) {
-        hash_tables_[i][left_key] = std::vector<Tuple>();
-      }
-      hash_tables_[i][left_key].push_back(left_tuple);
+    if (hash_table_.find({key}) == hash_table_.end()) {
+      hash_table_[{key}] = std::vector<Tuple>{};
     }
+    hash_table_[{key}].push_back(left_tuple);
 
     // update the left_done_ map
     CompositeJoinKey composite_join_key;
     composite_join_key.keys = key;
     left_done_[composite_join_key] = false;
 
-    printf("%s\n", left_tuple.ToString(&left_child_->GetOutputSchema()).c_str());
+    // printf("%s\n", left_tuple.ToString(&left_child_->GetOutputSchema()).c_str());
   }
-  printf("done building left table, left table size is %d\n", left_table_size);
+  // printf("done building left table, left table size is %d\n", left_table_size);
 }
 
 auto HashJoinExecutor::InnerJoinOutput(const Tuple &left, const Tuple &right) -> Tuple {
@@ -105,18 +97,8 @@ auto HashJoinExecutor::Next(Tuple *tuple, RID *rid) -> bool {
     auto key = MakeHashJoinRightKey(&right_tuple, right_child_->GetOutputSchema());
 
     std::vector<Tuple> left_tuple_candidates_;
-    for (size_t i = 0; i < key.size(); i++) {
-      if (i == 0){
-        left_tuple_candidates_ = hash_tables_[i][key[i]];
-      } else {
-        std::vector<Tuple> temp;
-        for (auto &candidate : left_tuple_candidates_) {
-          if (key[i] == MakeHashJoinLeftKey(&candidate, left_child_->GetOutputSchema())[i]) {
-            temp.push_back(std::move(candidate));
-          }
-        }
-        left_tuple_candidates_ = temp;
-      }
+    if (hash_table_.find({key}) != hash_table_.end()) {
+      left_tuple_candidates_ = hash_table_[{key}];
     }
 
     for (auto &match : left_tuple_candidates_) {
@@ -134,31 +116,14 @@ auto HashJoinExecutor::Next(Tuple *tuple, RID *rid) -> bool {
   }
 
   if (plan_->GetJoinType() == JoinType::LEFT && !left_join_check_) {
-    int count = 0;
-    int left_join_count = 0;
-    // printf("size of left done: %lu\n", left_done_.size());
-    // printf("checking left join\n");
-    left_child_->Init();
-    Tuple left_tuple;
-    RID left_rid;
-    while (left_child_->Next(&left_tuple, &left_rid)) {
-      count++;
-      auto key = MakeHashJoinLeftKey(&left_tuple, left_child_->GetOutputSchema());
-      if (left_done_[{key}] == false) {
-        queue_.push(LeftOuterJoinOutput(left_tuple));
-        left_join_count++;
-        // left_done_[{key}] = true;
-        // printf("doing left outer join\n");
+    for (const auto &iter : left_done_) {
+      if (!iter.second) {
+        for (const auto &left_tuple : hash_table_[iter.first]) {
+          queue_.push(LeftOuterJoinOutput(left_tuple));
+        }
       }
     }
     left_join_check_ = true;
-    for (auto &entry : left_done_) {
-      entry.second = true;
-    }
-    left_done_.erase(left_done_.begin(), left_done_.end());
-    // printf("cleainf left done\n");
-    // printf("count of left table: %d\n", count);
-    // printf("count of left join: %d\n", left_join_count);
   }
 
   if (!queue_.empty()) {
