@@ -41,7 +41,6 @@ class NestedLoopJoinExecutor : public AbstractExecutor {
   /** Initialize the join */
   void Init() override;
 
-
   auto LeftAntiJoinTuple(Tuple *left_tuple) -> Tuple;
 
   auto InnerJoinTuple(Tuple *left_tuple, Tuple *right_tuple) -> Tuple;

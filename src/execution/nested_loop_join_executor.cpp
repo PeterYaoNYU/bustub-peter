@@ -64,18 +64,23 @@ auto NestedLoopJoinExecutor::Next(Tuple *tuple, RID *rid) -> bool {
     }
 
     // check if there is matching right tuple
-    while (!right_done_){
+    while (!right_done_) {
       // printf("start interating over all right tuples\n");
-      if (plan_->predicate_ == nullptr || plan_->predicate_->EvaluateJoin(&left_tuple_, plan_->GetLeftPlan()->OutputSchema(), &right_tuple_, plan_->GetRightPlan()->OutputSchema()).GetAs<bool>()) {
+      if (plan_->predicate_ == nullptr || plan_->predicate_
+                                              ->EvaluateJoin(&left_tuple_, plan_->GetLeftPlan()->OutputSchema(),
+                                                             &right_tuple_, plan_->GetRightPlan()->OutputSchema())
+                                              .GetAs<bool>()) {
         // printf("matching tuple found\n");
         std::vector<Value> values;
         // Append all values from the left tuple
         for (const auto &col : left_executor_->GetOutputSchema().GetColumns()) {
-          values.push_back(left_tuple_.GetValue(&left_executor_->GetOutputSchema(), left_executor_->GetOutputSchema().GetColIdx(col.GetName())));
+          values.push_back(left_tuple_.GetValue(&left_executor_->GetOutputSchema(),
+                                                left_executor_->GetOutputSchema().GetColIdx(col.GetName())));
         }
         // then the right tuple
         for (const auto &col : right_executor_->GetOutputSchema().GetColumns()) {
-          values.push_back(right_tuple_.GetValue(&right_executor_->GetOutputSchema(), right_executor_->GetOutputSchema().GetColIdx(col.GetName())));
+          values.push_back(right_tuple_.GetValue(&right_executor_->GetOutputSchema(),
+                                                 right_executor_->GetOutputSchema().GetColIdx(col.GetName())));
         }
         *tuple = Tuple(values, &plan_->OutputSchema());
         right_done_ = !right_executor_->Next(&right_tuple_, &right_rid_);
@@ -90,7 +95,8 @@ auto NestedLoopJoinExecutor::Next(Tuple *tuple, RID *rid) -> bool {
       std::vector<Value> values;
       // Append all values from the left tuple
       for (const auto &col : left_executor_->GetOutputSchema().GetColumns()) {
-        values.push_back(left_tuple_.GetValue(&left_executor_->GetOutputSchema(), left_executor_->GetOutputSchema().GetColIdx(col.GetName())));
+        values.push_back(left_tuple_.GetValue(&left_executor_->GetOutputSchema(),
+                                              left_executor_->GetOutputSchema().GetColIdx(col.GetName())));
       }
       // then the right tuple
       for (const auto &col : right_executor_->GetOutputSchema().GetColumns()) {

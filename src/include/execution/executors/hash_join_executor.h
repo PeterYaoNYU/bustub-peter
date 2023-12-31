@@ -52,8 +52,50 @@ class HashJoinExecutor : public AbstractExecutor {
   auto GetOutputSchema() const -> const Schema & override { return plan_->OutputSchema(); };
 
  private:
+
+  auto MakeHashJoinLeftKey (const Tuple *tuple, const Schema &schema) -> std::vector<Value>  {
+    std::vector<Value> keys;
+
+    auto left_expr = plan_->LeftJoinKeyExpressions();
+    keys.reserve(left_expr.size());
+
+    for (auto &expr : left_expr) {
+      keys.push_back(expr->Evaluate(tuple, schema));
+    }
+    return keys;
+  }
+
+  auto MakeHashJoinRightKey (const Tuple *tuple, const Schema &schema) -> std::vector<Value>  {
+    std::vector<Value> keys;
+
+    auto right_expr = plan_->RightJoinKeyExpressions();
+    keys.reserve(right_expr.size());
+
+    for (auto &expr : right_expr) {
+      keys.push_back(expr->Evaluate(tuple, schema));
+    }
+    return keys;
+  }
+
+  auto InnerJoinOutput(const Tuple &left, const Tuple &right) -> Tuple;
+
   /** The HashJoin plan node to be executed. */
   const HashJoinPlanNode *plan_;
+
+  /** The child executor that produces tuples for the left side of join. */
+  std::unique_ptr<AbstractExecutor> left_child_;
+
+  /** The child executor that produces tuples for the right side of join. */
+  std::unique_ptr<AbstractExecutor> right_child_;
+
+  // a vector of hash table, one for each join key on the left side
+  // the hashed value is a vector of tuples, because there can be multiple tuples with the same hash key
+  std::vector<std::unordered_map<Value, std::vector<Tuple>>> hash_tables_;
+
+  // the htable for telling if a left join hashkey has a mathcing right tuple, used in left join
+  std::unordered_map<Value, bool> left_done_;
+
+  std::queue<Tuple> queue_;
 };
 
 }  // namespace bustub
