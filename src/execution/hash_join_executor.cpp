@@ -54,6 +54,13 @@ void HashJoinExecutor::Init() {
 auto HashJoinExecutor::InnerJoinOutput(const Tuple &left, const Tuple &right) -> Tuple {
   std::vector<Value> values{};
   values.reserve(GetOutputSchema().GetColumnCount());
+  for (uint32_t idx = 0; idx < left_child_->GetOutputSchema().GetColumnCount(); idx++) {
+    values.push_back(left.GetValue(&left_child_->GetOutputSchema(), idx));
+  }
+  for (uint32_t idx = 0; idx < right_child_->GetOutputSchema().GetColumnCount(); idx++) {
+    values.push_back(right.GetValue(&right_child_->GetOutputSchema(), idx));
+  }
+  return Tuple(values, &GetOutputSchema());
 }
 
 auto HashJoinExecutor::Next(Tuple *tuple, RID *rid) -> bool {

@@ -20,9 +20,13 @@
 #include "execution/plans/hash_join_plan.h"
 #include "storage/table/tuple.h"
 
+#include "catalog/schema.h"
+
 #include <unordered_map>
 #include <queue>
-#include "common/hash_util.h" // for Hash
+
+// do not include common/hash_util.h, because it can lead to redefiniton error
+#include "common/util/hash_util.h"
 
 namespace bustub {
 
@@ -35,6 +39,7 @@ struct HashJoinKey {
 
 }  // namespace bustub
 
+// creating a hash function for HashJoinKey
 namespace std{
   template <>
   struct hash<bustub::HashJoinKey> {
