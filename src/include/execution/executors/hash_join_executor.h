@@ -20,8 +20,31 @@
 #include "execution/plans/hash_join_plan.h"
 #include "storage/table/tuple.h"
 
+#include <unordered_map>
+#include <queue>
+#include "common/hash_util.h" // for Hash
+
 namespace bustub {
 
+// this is the key used in the hash table for hash join
+struct HashJoinKey {
+  Value key_;
+
+  auto operator==(const HashJoinKey &other) const -> bool { return key_.CompareEquals(other.key_) == CmpBool::CmpTrue; }
+};
+
+}  // namespace bustub
+
+namespace std{
+  template <>
+  struct hash<bustub::HashJoinKey> {
+    auto operator()(const bustub::HashJoinKey &key) const -> size_t {
+      return bustub::HashUtil::HashValue(&key.key_);
+    }
+  };
+}
+
+namespace bustub {
 /**
  * HashJoinExecutor executes a nested-loop JOIN on two tables.
  */
@@ -53,26 +76,26 @@ class HashJoinExecutor : public AbstractExecutor {
 
  private:
 
-  auto MakeHashJoinLeftKey (const Tuple *tuple, const Schema &schema) -> std::vector<Value>  {
-    std::vector<Value> keys;
+  auto MakeHashJoinLeftKey (const Tuple *tuple, const Schema &schema) -> std::vector<HashJoinKey>  {
+    std::vector<HashJoinKey> keys;
 
     auto left_expr = plan_->LeftJoinKeyExpressions();
     keys.reserve(left_expr.size());
 
     for (auto &expr : left_expr) {
-      keys.push_back(expr->Evaluate(tuple, schema));
+      keys.push_back({expr->Evaluate(tuple, schema)});
     }
     return keys;
   }
 
-  auto MakeHashJoinRightKey (const Tuple *tuple, const Schema &schema) -> std::vector<Value>  {
-    std::vector<Value> keys;
+  auto MakeHashJoinRightKey (const Tuple *tuple, const Schema &schema) -> std::vector<HashJoinKey>  {
+    std::vector<HashJoinKey> keys;
 
     auto right_expr = plan_->RightJoinKeyExpressions();
     keys.reserve(right_expr.size());
 
     for (auto &expr : right_expr) {
-      keys.push_back(expr->Evaluate(tuple, schema));
+      keys.push_back({expr->Evaluate(tuple, schema)});
     }
     return keys;
   }
@@ -90,10 +113,10 @@ class HashJoinExecutor : public AbstractExecutor {
 
   // a vector of hash table, one for each join key on the left side
   // the hashed value is a vector of tuples, because there can be multiple tuples with the same hash key
-  std::vector<std::unordered_map<Value, std::vector<Tuple>>> hash_tables_;
+  std::vector<std::unordered_map<HashJoinKey, std::vector<Tuple>>> hash_tables_;
 
   // the htable for telling if a left join hashkey has a mathcing right tuple, used in left join
-  std::unordered_map<Value, bool> left_done_;
+  std::unordered_map<HashJoinKey, bool> left_done_;
 
   std::queue<Tuple> queue_;
 };
