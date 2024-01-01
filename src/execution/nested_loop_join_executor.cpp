@@ -53,8 +53,8 @@ auto NestedLoopJoinExecutor::Next(Tuple *tuple, RID *rid) -> bool {
       right_done_ = false;
       mathch_found_ = false;
       right_done_ = !right_executor_->Next(&right_tuple_, &right_rid_);
-      // printf("calling next at line 55, right tuple: %s\n", right_tuple_.ToString(&right_executor_->GetOutputSchema()).c_str());
-      // printf("fetching the next left tuple\n");
+      // printf("calling next at line 55, right tuple: %s\n",
+      // right_tuple_.ToString(&right_executor_->GetOutputSchema()).c_str()); printf("fetching the next left tuple\n");
       left_done_ = !left_executor_->Next(&left_tuple_, &left_rid_);
       // printf("next left tuple fetched, left_done: %d\n", left_done_);
       if (left_done_) {
@@ -89,13 +89,15 @@ auto NestedLoopJoinExecutor::Next(Tuple *tuple, RID *rid) -> bool {
         // printf("%s\n", right_tuple_.ToString(&right_executor_->GetOutputSchema()).c_str());
         *tuple = Tuple(values, &plan_->OutputSchema());
         right_done_ = !right_executor_->Next(&right_tuple_, &right_rid_);
-        // printf("calling next at line 91, right tuple: %s\n", right_tuple_.ToString(&right_executor_->GetOutputSchema()).c_str());
+        // printf("calling next at line 91, right tuple: %s\n",
+        // right_tuple_.ToString(&right_executor_->GetOutputSchema()).c_str());
         mathch_found_ = true;
         return true;
       }
       // printf("get next right tuple\n");
       right_done_ = !right_executor_->Next(&right_tuple_, &right_rid_);
-      // printf("calling next at line 97, right tuple: %s\n", right_tuple_.ToString(&right_executor_->GetOutputSchema()).c_str());
+      // printf("calling next at line 97, right tuple: %s\n",
+      // right_tuple_.ToString(&right_executor_->GetOutputSchema()).c_str());
     }
     if (!mathch_found_ && plan_->GetJoinType() == JoinType::LEFT && right_done_) {
       // printf("matching tuple not found, but left join here\n");
