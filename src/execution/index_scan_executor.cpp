@@ -17,8 +17,8 @@ IndexScanExecutor::IndexScanExecutor(ExecutorContext *exec_ctx, const IndexScanP
 
 void IndexScanExecutor::Init() {
   // get the raw pointer to the table heap
-  table_heap_ = GetExecutorContext()->GetCatalog()->GetTable(plan_->GetTableOid())->table_.get();
-  table_info_ = GetExecutorContext()->GetCatalog()->GetTable(plan_->GetTableOid());
+  table_heap_ = GetExecutorContext()->GetCatalog()->GetTable(plan_->table_oid_)->table_.get();
+  table_info_ = GetExecutorContext()->GetCatalog()->GetTable(plan_->table_oid_);
   auto index_info = GetExecutorContext()->GetCatalog()->GetIndex(plan_->GetIndexOid());
   htable_ = dynamic_cast<HashTableIndexForTwoIntegerColumn *>(index_info->index_.get());
 

@@ -35,7 +35,7 @@ void HashJoinExecutor::Init() {
   Tuple left_tuple;
   RID left_rid;
 
-  int left_table_size =0;
+  int left_table_size = 0;
 
   while (left_child_->Next(&left_tuple, &left_rid)) {
     left_table_size++;
@@ -47,7 +47,7 @@ void HashJoinExecutor::Init() {
 
     // update the left_done_ map
     CompositeJoinKey composite_join_key;
-    composite_join_key.keys = key;
+    composite_join_key.keys_ = key;
     left_done_[composite_join_key] = false;
 
     // printf("%s\n", left_tuple.ToString(&left_child_->GetOutputSchema()).c_str());
@@ -64,7 +64,8 @@ auto HashJoinExecutor::InnerJoinOutput(const Tuple &left, const Tuple &right) ->
   for (uint32_t idx = 0; idx < right_child_->GetOutputSchema().GetColumnCount(); idx++) {
     values.push_back(right.GetValue(&right_child_->GetOutputSchema(), idx));
   }
-  return Tuple(values, &GetOutputSchema());
+  // return Tuple(values, &GetOutputSchema());
+  return {values, &GetOutputSchema()};
 }
 
 auto HashJoinExecutor::LeftOuterJoinOutput(const Tuple &left) -> Tuple {
@@ -76,7 +77,8 @@ auto HashJoinExecutor::LeftOuterJoinOutput(const Tuple &left) -> Tuple {
   for (uint32_t idx = 0; idx < right_child_->GetOutputSchema().GetColumnCount(); idx++) {
     values.push_back(ValueFactory::GetNullValueByType(right_child_->GetOutputSchema().GetColumn(idx).GetType()));
   }
-  return Tuple(values, &GetOutputSchema());
+  // return Tuple(values, &GetOutputSchema());
+  return {values, &GetOutputSchema()};
 }
 
 auto HashJoinExecutor::Next(Tuple *tuple, RID *rid) -> bool {
@@ -96,12 +98,12 @@ auto HashJoinExecutor::Next(Tuple *tuple, RID *rid) -> bool {
 
     auto key = MakeHashJoinRightKey(&right_tuple, right_child_->GetOutputSchema());
 
-    std::vector<Tuple> left_tuple_candidates_;
+    std::vector<Tuple> left_tuple_candidates;
     if (hash_table_.find({key}) != hash_table_.end()) {
-      left_tuple_candidates_ = hash_table_[{key}];
+      left_tuple_candidates = hash_table_[{key}];
     }
 
-    for (auto &match : left_tuple_candidates_) {
+    for (auto &match : left_tuple_candidates) {
       queue_.push(InnerJoinOutput(match, right_tuple));
       left_done_[{MakeHashJoinLeftKey(&match, left_child_->GetOutputSchema())}] = true;
       // printf("marking left done as true\n");
@@ -134,7 +136,6 @@ auto HashJoinExecutor::Next(Tuple *tuple, RID *rid) -> bool {
     // printf("queue size: %lu\n", queue_.size());
     return true;
   }
-
 
   return false;
 }

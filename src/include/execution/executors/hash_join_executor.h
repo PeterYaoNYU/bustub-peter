@@ -22,8 +22,8 @@
 
 #include "catalog/schema.h"
 
-#include <unordered_map>
 #include <queue>
+#include <unordered_map>
 
 // do not include common/hash_util.h, because it can lead to redefiniton error
 #include "common/util/hash_util.h"
@@ -39,14 +39,14 @@ struct HashJoinKey {
 };
 
 struct CompositeJoinKey {
-  std::vector<HashJoinKey> keys;
+  std::vector<HashJoinKey> keys_;
 
-  bool operator==(const CompositeJoinKey &other) const {
-    if (keys.size() != other.keys.size()) {
+  auto operator==(const CompositeJoinKey &other) const -> bool {
+    if (keys_.size() != other.keys_.size()) {
       return false;
     }
-    for (size_t i = 0; i < keys.size(); ++i) {
-      if (!(keys[i] == other.keys[i])) {
+    for (size_t i = 0; i < keys_.size(); ++i) {
+      if (!(keys_[i] == other.keys_[i])) {
         return false;
       }
     }
@@ -57,20 +57,17 @@ struct CompositeJoinKey {
 }  // namespace bustub
 
 // creating a hash function for HashJoinKey
-namespace std{
+namespace std {
 template <>
 struct hash<bustub::HashJoinKey> {
-  auto operator()(const bustub::HashJoinKey &key) const -> size_t {
-    return bustub::HashUtil::HashValue(&key.key_);
-  }
+  auto operator()(const bustub::HashJoinKey &key) const -> size_t { return bustub::HashUtil::HashValue(&key.key_); }
 };
-
 
 template <>
 struct hash<bustub::CompositeJoinKey> {
-  size_t operator()(const bustub::CompositeJoinKey &compositeKey) const {
+  auto operator()(const bustub::CompositeJoinKey &compositeKey) const -> size_t {
     size_t curr_hash = 0;
-    for (const auto &key : compositeKey.keys) {
+    for (const auto &key : compositeKey.keys_) {
       if (!key.key_.IsNull()) {
         curr_hash = bustub::HashUtil::CombineHashes(curr_hash, bustub::HashUtil::HashValue(&key.key_));
       }
@@ -78,7 +75,7 @@ struct hash<bustub::CompositeJoinKey> {
     return curr_hash;
   }
 };
-}
+}  // namespace std
 
 namespace bustub {
 /**
@@ -111,8 +108,7 @@ class HashJoinExecutor : public AbstractExecutor {
   auto GetOutputSchema() const -> const Schema & override { return plan_->OutputSchema(); };
 
  private:
-
-  auto MakeHashJoinLeftKey (const Tuple *tuple, const Schema &schema) -> std::vector<HashJoinKey>  {
+  auto MakeHashJoinLeftKey(const Tuple *tuple, const Schema &schema) -> std::vector<HashJoinKey> {
     std::vector<HashJoinKey> keys;
 
     auto left_expr = plan_->LeftJoinKeyExpressions();
@@ -124,7 +120,7 @@ class HashJoinExecutor : public AbstractExecutor {
     return keys;
   }
 
-  auto MakeHashJoinRightKey (const Tuple *tuple, const Schema &schema) -> std::vector<HashJoinKey>  {
+  auto MakeHashJoinRightKey(const Tuple *tuple, const Schema &schema) -> std::vector<HashJoinKey> {
     std::vector<HashJoinKey> keys;
 
     auto right_expr = plan_->RightJoinKeyExpressions();
