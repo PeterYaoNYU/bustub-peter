@@ -14,44 +14,29 @@ void TopNExecutor::Init() {
       const auto &sort_key_type = sort_key_expression->GetReturnType();
       const Type *type = Type::GetInstance(sort_key_type);
 
-      CmpBool cmp_result;
+      Value a_val = sort_key_expression->Evaluate(&a, this->child_executor_->GetOutputSchema());
+      Value b_val = sort_key_expression->Evaluate(&b, this->child_executor_->GetOutputSchema());
+
       if (order_by.first == OrderByType::ASC || order_by.first == OrderByType::DEFAULT ||
           order_by.first == OrderByType::INVALID) {
-        cmp_result = type->CompareLessThan(sort_key_expression->Evaluate(&a, this->child_executor_->GetOutputSchema()),
-                                           sort_key_expression->Evaluate(&b, this->child_executor_->GetOutputSchema()));
-        if (cmp_result == CmpBool::CmpTrue) {
+        if (type->CompareLessThan(a_val, b_val) == CmpBool::CmpTrue) {
           return true;
-          // important thing, if the first round is the same, check the next predicate
-        } else {
-          cmp_result =
-              type->CompareGreaterThan(sort_key_expression->Evaluate(&a, this->child_executor_->GetOutputSchema()),
-                                       sort_key_expression->Evaluate(&b, this->child_executor_->GetOutputSchema()));
-          if (cmp_result == CmpBool::CmpTrue) {
-            return false;
-          }
+        }
+        if (type->CompareGreaterThan(a_val, b_val) == CmpBool::CmpTrue) {
+          return false;
         }
       } else {  // OrderByType::DESC
-        // I am not sure if Evaluate(&a, this->GetOutputSchema() is the correct expression
-        cmp_result =
-            type->CompareGreaterThan(sort_key_expression->Evaluate(&a, this->child_executor_->GetOutputSchema()),
-                                     sort_key_expression->Evaluate(&b, this->child_executor_->GetOutputSchema()));
-        if (cmp_result == CmpBool::CmpTrue) {
+        if (type->CompareGreaterThan(a_val, b_val) == CmpBool::CmpTrue) {
           return true;
-        } else {
-          cmp_result =
-              type->CompareLessThan(sort_key_expression->Evaluate(&a, this->child_executor_->GetOutputSchema()),
-                                    sort_key_expression->Evaluate(&b, this->child_executor_->GetOutputSchema()));
-          if (cmp_result == CmpBool::CmpTrue) {
-            return false;
-          }
+        }
+        if (type->CompareLessThan(a_val, b_val) == CmpBool::CmpTrue) {
+          return false;
         }
       }
       // Continue to the next order_by if the current one results in equality
-      if (cmp_result == CmpBool::CmpNull || cmp_result == CmpBool::CmpFalse) {
-        continue;
-      }
+      // No need for an explicit check here, the loop will continue automatically
     }
-    return false;
+    return false;  // Return false if all comparisons resulted in equality
   };
 
   using TupleHeap = std::priority_queue<Tuple, std::vector<Tuple>, decltype(comparator)>;

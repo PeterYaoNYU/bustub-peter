@@ -324,7 +324,7 @@ class WindowAggregate {
   WindowFunctionType window_agg_type_;
 
   // if the window function is a simple aggregation
-  bool is_simple_agg_ {true};
+  bool is_simple_agg_{true};
 
   AbstractExpressionRef agg_expr_;
 
