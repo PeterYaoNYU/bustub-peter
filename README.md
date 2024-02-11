@@ -8,7 +8,7 @@ The part that I Implemented:
 
 3. Extendible hash index: src/container/disk/hash/disk_extendible_hash_table.cpp, src/include/storage/page/*,  
    For detailed documentation, you may refer to: https://peteryaonyu.github.io/2024/01/13/Database-Implementation-of-an-Entendible-Hash-Index/ (not a complete documentation because of the limited time   
-4. Query Executor and optimizer: The code that I have written：
+4. Query Executor and optimizer: The code that I have written：  
       src/include/execution/seq_scan_executor.h  
       src/execution/seq_scan_executor.cpp      
       src/include/execution/insert_executor.h  
