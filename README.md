@@ -2,7 +2,7 @@
 
 The part that I Implemented: 
 
-1. Buffer Pool Manager: The part that I have writter: src/buffer/lru_k_replacer.cpp, src/storage/disk/disk_scheduler.cpp, src/buffer/buffer_pool_manager.cpp
+1. Buffer Pool Manager: The part that I have writter: src/buffer/lru_k_replacer.cpp, src/storage/disk/disk_scheduler.cpp, src/buffer/buffer_pool_manager.cpp   
      A complete doc can be found here: https://peteryaonyu.github.io/2023/12/19/Database-Bustub-Buffer-Pool-Manager-Implementation/  
       
 
@@ -36,6 +36,7 @@ The part that I Implemented:
       src/include/execution/window_function_executor.h  
       src/execution/window_function_executor.cpp  
       src/optimizer/sort_limit_as_topn.cpp
+   
       I don't have time to write a document about it because of the limited time.
       
 
