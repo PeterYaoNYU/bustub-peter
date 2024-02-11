@@ -1,5 +1,44 @@
 <img src="logo/bustub-whiteborder.svg" alt="BusTub Logo" height="200">
 
+The part that I Implemented: 
+
+1. Buffer Pool Manager: The part that I have writter: src/buffer/lru_k_replacer.cpp, src/storage/disk/disk_scheduler.cpp, src/buffer/buffer_pool_manager.cpp
+     A complete doc can be found here: https://peteryaonyu.github.io/2023/12/19/Database-Bustub-Buffer-Pool-Manager-Implementation/  
+      
+
+3. Extendible hash index: src/container/disk/hash/disk_extendible_hash_table.cpp, src/include/storage/page/*,  
+   For detailed documentation, you may refer to: https://peteryaonyu.github.io/2024/01/13/Database-Implementation-of-an-Entendible-Hash-Index/ (not a complete documentation because of the limited time   
+4. Query Executor and optimizer: The code that I have written：
+      src/include/execution/seq_scan_executor.h  
+      src/execution/seq_scan_executor.cpp      
+      src/include/execution/insert_executor.h  
+      src/execution/insert_executor.cpp  
+      src/include/execution/update_executor.h  
+      src/execution/update_executor.cpp  
+      src/include/execution/delete_executor.h  
+      src/execution/delete_executor.cpp  
+      src/include/execution/index_scan_executor.h  
+      src/execution/index_scan_executor.cpp    
+      src/optimizer/seqscan_as_indexscan.cpp  
+      src/include/execution/aggregation_executor.h  
+      src/execution/aggregation_executor.cpp  
+      src/include/execution/nested_loop_join_executor.h  
+      src/execution/nested_loop_join_executor.cpp
+      src/include/execution/hash_join_executor.h  
+      src/execution/hash_join_executor.cpp   
+      src/optimizer/nlj_as_hash_join.cpp  
+      src/include/execution/sort_executor.h  
+      src/execution/sort_executor.cpp  
+      src/include/execution/limit_executor.h  
+      src/execution/limit_executor.cpp  
+      src/include/execution/topn_executor.h  
+      src/execution/topn_executor.cpp  
+      src/include/execution/window_function_executor.h  
+      src/execution/window_function_executor.cpp  
+      src/optimizer/sort_limit_as_topn.cpp
+      I don't have time to write a document about it because of the limited time.
+      
+
 -----------------
 
 [![Build Status](https://github.com/cmu-db/bustub/actions/workflows/cmake.yml/badge.svg)](https://github.com/cmu-db/bustub/actions/workflows/cmake.yml)
